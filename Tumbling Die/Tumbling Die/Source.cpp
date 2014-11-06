@@ -102,7 +102,7 @@ int FindAdjacentLeftOfTop(int top, int side)
 	{
 		adj = 2;
 	}
-	else if ((top == 1 & side == 5) || (top == 2 && side == 1) ||
+	else if ((top == 1 && side == 5) || (top == 2 && side == 1) ||
 			 (top == 5 && side == 6) || (top == 6 && side == 2))
 	{
 		adj = 3;
@@ -186,14 +186,22 @@ void TraverseBoard(int size, int top)
 	Node cell;
 	queue<Node> cellQ;
 
+	array<array<int, 4>, 3> NewDie;
+
 	Mark(row, col);
-	cell.first = row; cell.second = col;
+	cell.first = row; 
+	cell.second = col;
+	cell.top = trackTop;
+	cell.Dice = Die;
 	cellQ.push(cell);
 	while (!cellQ.empty())
 	{
 		// dequeue front node from queue
 		cell = cellQ.front(); cellQ.pop();
-		row = cell.first; col = cell.second;
+		row = cell.first; 
+		col = cell.second;
+		trackTop = cell.top;
+		NewDie = cell.Dice;
 
 		// for all nodes adjacent to front node
 		for (int i = -1; i <= 1; i++)

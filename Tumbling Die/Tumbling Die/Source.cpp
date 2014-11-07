@@ -149,7 +149,8 @@ void MakeDie(DieType &Die, int top, int side)
 	Die[1][2] = FindOpposite(Die[1][0]);
 }
 
-DieType FlipDie(DieType &Die, int row, int col, int NewRow, int NewCol, char &direction)
+/*
+char FlipDie(DieType &Die, int row, int col, int NewRow, int NewCol, char &direction)
 {
 	DieType NewDie;
 	NewDie = Die;
@@ -189,178 +190,15 @@ DieType FlipDie(DieType &Die, int row, int col, int NewRow, int NewCol, char &di
 		NewDie[1][3] = Die[1][0];
 		direction = 'L';
 	}
-	return NewDie;
-}
-
-struct Node
-{
-	int row, col, top;
-	array<array<int, 4>, 3> Dice;
-	char direction;
-};
-/*
-bool IsSolutionFound(int top, int size)
-{
-	bool foundSolution = false;
-	int trackTop = top;
-	int row = size / 2;
-	int col = size / 2;
-	int finishRow = row;
-	int finishCol = col;
-	int previousValue = 0;
-	char direction = 'X';
-
-	Node cell;
-	queue<Node> cellQ;
-
-	array<array<int, 4>, 3> NewDie;
-
-	// put first cell into the queue
-	//Mark(row, col);
-	cell.row = row;
-	cell.col = col;
-	cell.top = trackTop;
-	cell.Dice = Die;
-	cellQ.push(cell);
-
-	while (!cellQ.empty())
-	{
-		// dequeue front node from queue
-		//cell = cellQ.front(); //cellQ.pop();
-		cell = cellQ.back();
-		row = cell.row;
-		col = cell.col;
-		trackTop = cell.top;
-		NewDie = cell.Dice;
-
-		// for all nodes adjacent to front node
-		for (int i = -1; i <= 1; i++)
-		{
-			for (int j = -1; j <= 1; j++)
-			{
-				int NewRow = row + i;
-				int NewCol = col + j;
-
-				// checks the bounds of the Board
-				if (NewRow >= 0 && NewRow < size && NewCol >= 0 && NewCol < size)
-				{
-					// checks up, down, left right
-					if (i == -1 && j == 0 || i == 1 && j == 0 ||
-						i == 0 && j == -1 || i == 0 && j == 1)
-					{
-						if ((Board[NewRow][NewCol] == trackTop || Board[NewRow][NewCol] == AST) && (!Marked(Board[NewRow][NewCol])))
-						{
-
-							previousValue = Mark(row, col);
-							DrawBoard(size);
-
-							NewDie = FlipDie(NewDie, row, col, NewRow, NewCol, cell.direction);
-							cout << cell.direction << endl;
-							if (NewRow == finishRow && NewCol == finishCol)
-							{ 
-								foundSolution = true;
-							}
-							else
-							{
-								cell.row = NewRow;
-								cell.col = NewCol;
-								cell.top = NewDie[1][1];
-								cell.Dice = NewDie;
-
-								cellQ.push(cell);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		UnMark(previousValue, row, col);
-		if (foundSolution)
-		{
-			for (int i = 0; i < cellQ.size(); i++)
-			{
-				cout << cellQ.back().direction;
-				cellQ.pop();
-			}
-		}
-	}
-	
-	return foundSolution;
+	Die = NewDie;
+	return direction;
 }
 */
 
-//void FindSolution(BoardType &Board, DieType &Die, stack<char> &Directions, int row, int col, int top, int size, char &direction, bool &foundEnd)
-//{
-//	if (direction != 'x')
-//		Directions.push(direction);
-//	int previousValue = Board[row][col];
-//	Mark(Board, row, col);
-//
-//	// Finds adjacent accessibly nodes
-//	for (int i = -1; i <= 1; i++)
-//	{
-//		for (int j = -1; j <= 1; j++)
-//		{
-//			if (!foundEnd)
-//			{
-//				int NewRow = row + i;
-//				int NewCol = col + j;
-//				if (NewRow >= 0 && NewRow < size && NewCol >= 0 && NewCol < size)
-//				{
-//					// checks up, down, left right
-//					if (i == -1 && j == 0 || i == 1 && j == 0 ||
-//						i == 0 && j == -1 || i == 0 && j == 1)
-//					{
-//						if ((Board[NewRow][NewCol] == top || Board[NewRow][NewCol] == AST) && !Marked(Board[NewRow][NewCol]))
-//						{
-//							if (NewRow == size / 2 && NewCol == size / 2)
-//							{
-//								foundEnd = true;
-//								Die = FlipDie(Die, row, col, NewRow, NewCol, direction);
-//								Directions.push(direction);
-//							}
-//							else
-//							{
-//								DrawBoard(Board, size);
-//								UnMark(Board, previousValue, row, col);
-//								Die = FlipDie(Die, row, col, NewRow, NewCol, direction);
-//								top = Die[1][1];
-//								FindSolution(Board, Die, Directions, NewRow, NewCol, top, size, direction, foundEnd);
-//							}
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
-//
-//void IsSolutionFound(BoardType &Board, DieType &Die, int top, int size)
-//{
-//	// gets starting point
-//	int row = size / 2;
-//	int col = size / 2;
-//
-//	stack<char> Directions;
-//	DieType NewDie = Die;
-//
-//	char direction = 'x';
-//	bool foundEnd = false;
-//	FindSolution(Board, NewDie, Directions, row, col, top, size, direction, foundEnd);
-//
-//	DrawBoard(Board, size);
-//	while (!Directions.empty())
-//	{
-//		cout << Directions.top() << endl;
-//		Directions.pop();
-//	}
-//}
-
 bool IsSolutionFound(BoardType &Board, DieType &Die, stack<char> &Directions, int row, int col, char &direction)
 {
-	if (direction != 'x')
-		Directions.push(direction);
+	//if (direction != 'x')
+	//	Directions.push(direction);
 
 	int prevValue = Board[row][col];
 	Board[row][col] = 'X';
@@ -378,18 +216,95 @@ bool IsSolutionFound(BoardType &Board, DieType &Die, stack<char> &Directions, in
 				// checks [NewRow][NewCol] if it matches the top of our die
 				if (Board[NewRow][NewCol] == Die[1][1] || Board[NewRow][NewCol] == AST && Board[NewRow][NewCol] != prevValue)
 				{
-					Die = FlipDie(Die, row, col, NewRow, NewCol, direction);
-					IsSolutionFound(Board, Die, Directions, NewRow, NewCol, direction);
-				}
-				else
-				{
+					direction = FlipDie(Die, row, col, NewRow, NewCol, direction);
+					Directions.push(direction);
 					
+					if (IsSolutionFound(Board, Die, Directions, NewRow, NewCol, direction))
+					{
+						return true;
+					}
+					else
+					{
+						Directions.pop();
+						return false;
+					}
 				}
 			}
 		}
 	}
 
 
+
+}
+
+struct NodeType
+{
+	int currentX;
+	int currentY;
+	char direction;
+};
+
+void Solve(BoardType &Board, int size)
+{
+	bool found = false;
+	queue<NodeType> NodeQ;
+	NodeType Node, NewNode;
+
+	Node.currentX = size / 2;
+	Node.currentY = size / 2;
+	Node.direction = NULL;
+
+	NodeQ.push(Node);
+
+	while (!found && !NodeQ.empty())
+	{
+		Node = NodeQ.front(); NodeQ.pop();
+		int x = Node.currentX; int y = Node.currentY;
+
+		if (Board[x][y] == 0)
+		{
+
+		}
+		else
+		{
+			// mark previous position
+
+			if (!Marked(Board[x][y - 1])) // Left
+			{
+				NewNode.currentX = x;
+				NewNode.currentY = y - 1;
+				NewNode.direction = 'L';
+				NodeQ.push(NewNode);
+			}
+			if (!Marked(Board[x][y + 1])) // Right
+			{
+				NewNode.currentX = x;
+				NewNode.currentY = y + 1;
+				NewNode.direction = 'R';
+				NodeQ.push(NewNode);
+			}
+			if (!Marked(Board[x - 1][y])) // Up
+			{
+				NewNode.currentX = x - 1;
+				NewNode.currentY = y;
+				NewNode.direction = 'U';
+				NodeQ.push(NewNode);
+			}
+			if (!Marked(Board[x + 1][y])) // Down
+			{
+				NewNode.currentX = x + 1;
+				NewNode.currentY = y;
+				NewNode.direction = 'D';
+				NodeQ.push(NewNode);
+			}
+		}
+	}
+	if (!found)
+	{
+		cout << "No Solution Found." << endl;
+	}
+	DrawBoard(Board, size);
+	cout << endl;
 
 }
 
@@ -424,7 +339,18 @@ void main()
 			stack<char> Directions;
 			char direction = 'x';
 
-			IsSolutionFound(Board, Die, Directions, row, col, direction);
+			if (IsSolutionFound(Board, Die, Directions, row, col, direction))
+				cout << "Found" << endl;
+			else
+				cout << "Solution Not Found" << endl;
+
+			while (!Directions.empty())
+			{
+				cout << Directions.top();
+				Directions.pop();
+			}
+			cout << endl;
+			DrawBoard(Board, size);
 
 			fin >> size >> top >> side;
 		}

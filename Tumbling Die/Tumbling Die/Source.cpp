@@ -3,6 +3,7 @@
 #include <array>
 #include <string>
 #include <queue>
+#include <stack>
 using namespace std;
 
 const string INPUT = "die.in";
@@ -10,27 +11,30 @@ const string OUTPUT = "die.out";
 const int BOARD_SIZE = 99;
 const int AST = 7;
 
+typedef array<array<int, 4>, 3 > DieType;
+typedef array<array<int, BOARD_SIZE>, BOARD_SIZE> BoardType;
+
 // Only one of these are used for the duration of the program
-array<array<int, BOARD_SIZE>, BOARD_SIZE> Board;
-array<array<int, 4>, 3> Die;
+//BoardType Board;
+//DieType Die;
 
 #define Marker 'X'
 #define Marked(ch) (ch == Marker)
 
 // Utility Functions
-void ClearDie()
+void ClearDie(DieType &Die)
 {
 	for (int i = 0; i < 3; i++)
 		for (int j = 0; j < 4; j++)
 			Die[i][j] = 0;
 }
-void ClearBoard()
+void ClearBoard(BoardType &Board)
 {
 	for (int i = 0; i < BOARD_SIZE; i++)
 for (int j = 0; j < BOARD_SIZE; j++)
 	Board[i][j] = 0;
 }
-void DrawBoard(int size)
+void DrawBoard(BoardType &Board, int size)
 {
 	for (int i = 0; i < size; i++)
 	{
@@ -38,6 +42,8 @@ void DrawBoard(int size)
 		{
 			if (Board[i][j] == 7)
 				cout << '*';
+			else if (Board[i][j] == 88)
+				cout << 'X';
 			else
 				cout << Board[i][j];
 		}
@@ -45,7 +51,7 @@ void DrawBoard(int size)
 	}
 	cout << endl;
 }
-void DrawDie()
+void DrawDie(DieType &Die)
 {
 	for (int i = 0; i < 3; i++)
 	{
@@ -57,9 +63,18 @@ void DrawDie()
 	}
 	cout << endl;
 }
-void Mark(int row, int col) { Board[row][col] = Marker; }
+int Mark(BoardType &Board, int row, int col) 
+{
+	int previousValue = Board[row][col];
+	Board[row][col] = Marker; 
+	return previousValue;
+}
+void UnMark(BoardType &Board, int previousValue, int row, int col)
+{
+	Board[row][col] = previousValue;
+}
 
-void ReadBoardFromFile(ifstream &fin, int size)
+void ReadBoardFromFile(BoardType &Board, ifstream &fin, int size)
 {
 	string readLine;
 	for (int i = 0; i < size; i++)
@@ -124,7 +139,7 @@ int FindAdjacentLeftOfTop(int top, int side)
 
 	return adj;
 }
-void MakeDie(int top, int side)
+void MakeDie(DieType &Die, int top, int side)
 {
 	Die[1][1] = top;
 	Die[1][3] = FindOpposite(top);
@@ -133,73 +148,88 @@ void MakeDie(int top, int side)
 	Die[1][0] = FindAdjacentLeftOfTop(top, side);
 	Die[1][2] = FindOpposite(Die[1][0]);
 }
-//
-//void FlipDie()
-//{
-//	array<array<int, 4>, 3> NewDie;
-//	NewDie = Die;
-//	if (row > NewRow && col == NewCol)
-//	{
-//		// Up
-//		NewDie[0][1] = Die[1][1];
-//		NewDie[1][1] = Die[2][1];
-//		NewDie[1][3] = Die[0][1];
-//		NewDie[2][1] = Die[1][3];
-//
-//	}
-//	else if (row == NewRow && col < NewCol)
-//	{
-//		// Right
-//		NewDie[1][0] = Die[1][3];
-//		NewDie[1][1] = Die[1][0];
-//		NewDie[1][2] = Die[1][1];
-//		NewDie[1][3] = Die[1][2];
-//	}
-//	else if (row < NewRow && col == NewCol)
-//	{
-//		// Down
-//		NewDie[0][1] = Die[1][3];
-//		NewDie[1][1] = Die[0][1];
-//		NewDie[1][3] = Die[2][1];
-//		NewDie[2][1] = Die[1][1];
-//	}
-//	else if (row == NewCol && col > NewCol)
-//	{
-//		// Left
-//		NewDie[1][0] = Die[1][1];
-//		NewDie[1][1] = Die[1][2];
-//		NewDie[1][2] = Die[1][3];
-//		NewDie[1][3] = Die[1][0];
-//	}
-//}
 
-void TraverseBoard(int size, int top)
+DieType FlipDie(DieType &Die, int row, int col, int NewRow, int NewCol, char &direction)
 {
+	DieType NewDie;
+	NewDie = Die;
+	if (row > NewRow && col == NewCol)
+	{
+		// Up
+		NewDie[0][1] = Die[1][1];
+		NewDie[1][1] = Die[2][1];
+		NewDie[1][3] = Die[0][1];
+		NewDie[2][1] = Die[1][3];
+		direction = 'U';
+	}
+	else if (row == NewRow && col < NewCol)
+	{
+		// Right
+		NewDie[1][0] = Die[1][3];
+		NewDie[1][1] = Die[1][0];
+		NewDie[1][2] = Die[1][1];
+		NewDie[1][3] = Die[1][2];
+		direction = 'R';
+	}
+	else if (row < NewRow && col == NewCol)
+	{
+		// Down
+		NewDie[0][1] = Die[1][3];
+		NewDie[1][1] = Die[0][1];
+		NewDie[1][3] = Die[2][1];
+		NewDie[2][1] = Die[1][1];
+		direction = 'D';
+	}
+	else if (row == NewCol && col > NewCol)
+	{
+		// Left
+		NewDie[1][0] = Die[1][1];
+		NewDie[1][1] = Die[1][2];
+		NewDie[1][2] = Die[1][3];
+		NewDie[1][3] = Die[1][0];
+		direction = 'L';
+	}
+	return NewDie;
+}
+
+struct Node
+{
+	int row, col, top;
+	array<array<int, 4>, 3> Dice;
+	char direction;
+};
+/*
+bool IsSolutionFound(int top, int size)
+{
+	bool foundSolution = false;
 	int trackTop = top;
 	int row = size / 2;
 	int col = size / 2;
 	int finishRow = row;
 	int finishCol = col;
+	int previousValue = 0;
+	char direction = 'X';
 
-	int MaxQueueSize = 0;
-	struct Node { int first, second, top; array<array<int, 4>, 3> Dice; };
 	Node cell;
 	queue<Node> cellQ;
 
 	array<array<int, 4>, 3> NewDie;
 
-	Mark(row, col);
-	cell.first = row; 
-	cell.second = col;
+	// put first cell into the queue
+	//Mark(row, col);
+	cell.row = row;
+	cell.col = col;
 	cell.top = trackTop;
 	cell.Dice = Die;
 	cellQ.push(cell);
+
 	while (!cellQ.empty())
 	{
 		// dequeue front node from queue
-		cell = cellQ.front(); cellQ.pop();
-		row = cell.first; 
-		col = cell.second;
+		//cell = cellQ.front(); //cellQ.pop();
+		cell = cellQ.back();
+		row = cell.row;
+		col = cell.col;
 		trackTop = cell.top;
 		NewDie = cell.Dice;
 
@@ -210,20 +240,157 @@ void TraverseBoard(int size, int top)
 			{
 				int NewRow = row + i;
 				int NewCol = col + j;
-				if ((Board[NewRow][NewCol] == trackTop) && (!Marked(Board[NewRow][NewCol])))
+
+				// checks the bounds of the Board
+				if (NewRow >= 0 && NewRow < size && NewCol >= 0 && NewCol < size)
 				{
-					Mark(NewRow, NewCol);
+					// checks up, down, left right
+					if (i == -1 && j == 0 || i == 1 && j == 0 ||
+						i == 0 && j == -1 || i == 0 && j == 1)
+					{
+						if ((Board[NewRow][NewCol] == trackTop || Board[NewRow][NewCol] == AST) && (!Marked(Board[NewRow][NewCol])))
+						{
 
-					cell.first = NewRow; cell.second = NewCol; 
-					cell.top = trackTop; cell.Dice = Die;
+							previousValue = Mark(row, col);
+							DrawBoard(size);
 
-					cellQ.push(cell);
-					if (cellQ.size() > MaxQueueSize)
-						MaxQueueSize = cellQ.size();
+							NewDie = FlipDie(NewDie, row, col, NewRow, NewCol, cell.direction);
+							cout << cell.direction << endl;
+							if (NewRow == finishRow && NewCol == finishCol)
+							{ 
+								foundSolution = true;
+							}
+							else
+							{
+								cell.row = NewRow;
+								cell.col = NewCol;
+								cell.top = NewDie[1][1];
+								cell.Dice = NewDie;
+
+								cellQ.push(cell);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		UnMark(previousValue, row, col);
+		if (foundSolution)
+		{
+			for (int i = 0; i < cellQ.size(); i++)
+			{
+				cout << cellQ.back().direction;
+				cellQ.pop();
+			}
+		}
+	}
+	
+	return foundSolution;
+}
+*/
+
+//void FindSolution(BoardType &Board, DieType &Die, stack<char> &Directions, int row, int col, int top, int size, char &direction, bool &foundEnd)
+//{
+//	if (direction != 'x')
+//		Directions.push(direction);
+//	int previousValue = Board[row][col];
+//	Mark(Board, row, col);
+//
+//	// Finds adjacent accessibly nodes
+//	for (int i = -1; i <= 1; i++)
+//	{
+//		for (int j = -1; j <= 1; j++)
+//		{
+//			if (!foundEnd)
+//			{
+//				int NewRow = row + i;
+//				int NewCol = col + j;
+//				if (NewRow >= 0 && NewRow < size && NewCol >= 0 && NewCol < size)
+//				{
+//					// checks up, down, left right
+//					if (i == -1 && j == 0 || i == 1 && j == 0 ||
+//						i == 0 && j == -1 || i == 0 && j == 1)
+//					{
+//						if ((Board[NewRow][NewCol] == top || Board[NewRow][NewCol] == AST) && !Marked(Board[NewRow][NewCol]))
+//						{
+//							if (NewRow == size / 2 && NewCol == size / 2)
+//							{
+//								foundEnd = true;
+//								Die = FlipDie(Die, row, col, NewRow, NewCol, direction);
+//								Directions.push(direction);
+//							}
+//							else
+//							{
+//								DrawBoard(Board, size);
+//								UnMark(Board, previousValue, row, col);
+//								Die = FlipDie(Die, row, col, NewRow, NewCol, direction);
+//								top = Die[1][1];
+//								FindSolution(Board, Die, Directions, NewRow, NewCol, top, size, direction, foundEnd);
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
+//}
+//
+//void IsSolutionFound(BoardType &Board, DieType &Die, int top, int size)
+//{
+//	// gets starting point
+//	int row = size / 2;
+//	int col = size / 2;
+//
+//	stack<char> Directions;
+//	DieType NewDie = Die;
+//
+//	char direction = 'x';
+//	bool foundEnd = false;
+//	FindSolution(Board, NewDie, Directions, row, col, top, size, direction, foundEnd);
+//
+//	DrawBoard(Board, size);
+//	while (!Directions.empty())
+//	{
+//		cout << Directions.top() << endl;
+//		Directions.pop();
+//	}
+//}
+
+bool IsSolutionFound(BoardType &Board, DieType &Die, stack<char> &Directions, int row, int col, char &direction)
+{
+	if (direction != 'x')
+		Directions.push(direction);
+
+	int prevValue = Board[row][col];
+	Board[row][col] = 'X';
+	
+	// checks adjacent cells
+	for (int i = -1; i <= 1; i++)
+	{
+		for (int j = -1; j <= 1; j++)
+		{
+			// checks up down left right
+			if ((i == -1 && j == 0) || (i == 1 && j == 0) || (i == 0 && j == -1) || (i == 0 && j == 1))
+			{
+				int NewRow = row + i;
+				int NewCol = col + j;
+				// checks [NewRow][NewCol] if it matches the top of our die
+				if (Board[NewRow][NewCol] == Die[1][1] || Board[NewRow][NewCol] == AST && Board[NewRow][NewCol] != prevValue)
+				{
+					Die = FlipDie(Die, row, col, NewRow, NewCol, direction);
+					IsSolutionFound(Board, Die, Directions, NewRow, NewCol, direction);
+				}
+				else
+				{
+					
 				}
 			}
 		}
 	}
+
+
+
 }
 
 void main()
@@ -233,20 +400,31 @@ void main()
 	{
 		//ofstream fout(OUTPUT);
 
+		BoardType Board;
+		DieType Die;
+
 		int size, top, side;
 		fin >> size >> top >> side;
 		while (size != 0)
 		{
-			ClearBoard();
-			ClearDie();
+			ClearBoard(Board);
+			for (int i = 0; i < 3; i++)
+				for (int j = 0; j < 4; j++)
+					Die[i][j] = 0;
 
-			ReadBoardFromFile(fin, size);
-			MakeDie(top, side);
+			ReadBoardFromFile(Board, fin, size);
+			MakeDie(Die, top, side);
 
-			DrawBoard(size);
-			DrawDie();
+			//DrawBoard(Board, size);
+			//DrawDie(Die);
 
-			TraverseBoard(size, top);
+			int row = size / 2;
+			int col = size / 2;
+
+			stack<char> Directions;
+			char direction = 'x';
+
+			IsSolutionFound(Board, Die, Directions, row, col, direction);
 
 			fin >> size >> top >> side;
 		}

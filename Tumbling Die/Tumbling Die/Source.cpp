@@ -206,6 +206,7 @@ struct Coord
 {
 	int x, y;
 	char direction;
+	bool valid;
 };
 
 void Test(BoardType &Board, DieType &Die, int size)
@@ -217,6 +218,7 @@ void Test(BoardType &Board, DieType &Die, int size)
 	stack<Coord> Directions;
 	Coord Start;
 	Start.x = row; Start.y = col;
+	Start.valid = false;
 	Directions.push(Start);
 
 	Start.direction = ' ';
@@ -225,11 +227,12 @@ void Test(BoardType &Board, DieType &Die, int size)
 	{
 		Coord CheckValid;
 		CheckValid = Directions.top();
-		Directions.pop();
+		//Directions.pop();
 		FlipDie(NewDie, CheckValid.direction);
 
 		for (int i = -1; i <= 1; i++)
 		{
+			int directionCount = 0;
 			for (int j = -1; j <= 1; j++)
 			{
 				if (i == -1 && j == 0 || i == 1 && j == 0 || i == 0 && j == -1 || i == 0 && j == 1 || i == 1 && j == 1)
@@ -252,6 +255,16 @@ void Test(BoardType &Board, DieType &Die, int size)
 
 							Directions.push(NewValid);
 							cout << NewRow << " " << NewCol << " " << NewValid.direction << endl;
+						}
+						else
+						{
+							directionCount++;
+						}
+
+						if (directionCount == 4)
+						{
+
+							Directions.pop();
 						}
 					}
 				}

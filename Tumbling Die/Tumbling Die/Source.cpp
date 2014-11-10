@@ -14,10 +14,6 @@ const int AST = 7;
 typedef array<array<int, 4>, 3 > DieType;
 typedef array<array<int, BOARD_SIZE>, BOARD_SIZE> BoardType;
 
-// Only one of these are used for the duration of the program
-//BoardType Board;
-//DieType Die;
-
 #define Marker 'X'
 #define Marked(ch) (ch == Marker)
 
@@ -149,162 +145,119 @@ void MakeDie(DieType &Die, int top, int side)
 	Die[1][2] = FindOpposite(Die[1][0]);
 }
 
-/*
-char FlipDie(DieType &Die, int row, int col, int NewRow, int NewCol, char &direction)
+struct Coordinate
 {
-	DieType NewDie;
-	NewDie = Die;
-	if (row > NewRow && col == NewCol)
+	int currentX;
+	int currentY;
+};
+
+struct NodeType
+{
+	Coordinate c;
+	int top;
+	DieType nodeDie;
+};
+
+struct Ast
+{
+	int pos;
+	bool prevPos;
+};
+
+void FlipDie(DieType &Die, char direction)
+{
+	DieType NewDie = Die;
+	if (direction == 'U')
 	{
 		// Up
 		NewDie[0][1] = Die[1][1];
 		NewDie[1][1] = Die[2][1];
 		NewDie[1][3] = Die[0][1];
 		NewDie[2][1] = Die[1][3];
-		direction = 'U';
 	}
-	else if (row == NewRow && col < NewCol)
+	else if (direction == 'R')
 	{
 		// Right
 		NewDie[1][0] = Die[1][3];
 		NewDie[1][1] = Die[1][0];
 		NewDie[1][2] = Die[1][1];
 		NewDie[1][3] = Die[1][2];
-		direction = 'R';
 	}
-	else if (row < NewRow && col == NewCol)
+	else if (direction == 'D')
 	{
 		// Down
 		NewDie[0][1] = Die[1][3];
 		NewDie[1][1] = Die[0][1];
 		NewDie[1][3] = Die[2][1];
 		NewDie[2][1] = Die[1][1];
-		direction = 'D';
 	}
-	else if (row == NewCol && col > NewCol)
+	else if (direction == 'L')
 	{
 		// Left
 		NewDie[1][0] = Die[1][1];
 		NewDie[1][1] = Die[1][2];
 		NewDie[1][2] = Die[1][3];
 		NewDie[1][3] = Die[1][0];
-		direction = 'L';
 	}
 	Die = NewDie;
-	return direction;
 }
-*/
 
-bool IsSolutionFound(BoardType &Board, DieType &Die, stack<char> &Directions, int row, int col, char &direction)
+struct Coord
 {
-	//if (direction != 'x')
-	//	Directions.push(direction);
+	int x, y;
+	char direction;
+};
 
-	int prevValue = Board[row][col];
-	Board[row][col] = 'X';
-	
-	// checks adjacent cells
-	for (int i = -1; i <= 1; i++)
+void Test(BoardType &Board, DieType &Die, int size)
+{
+	DieType NewDie = Die;
+	int row = size / 2;
+	int col = size / 2;
+
+	stack<Coord> Directions;
+	Coord Start;
+	Start.x = row; Start.y = col;
+	Directions.push(Start);
+
+	Start.direction = ' ';
+
+	while (!Directions.empty())
 	{
-		for (int j = -1; j <= 1; j++)
+		Coord CheckValid;
+		CheckValid = Directions.top();
+		Directions.pop();
+		FlipDie(NewDie, CheckValid.direction);
+
+		for (int i = -1; i <= 1; i++)
 		{
-			// checks up down left right
-			if ((i == -1 && j == 0) || (i == 1 && j == 0) || (i == 0 && j == -1) || (i == 0 && j == 1))
+			for (int j = -1; j <= 1; j++)
 			{
-				int NewRow = row + i;
-				int NewCol = col + j;
-				// checks [NewRow][NewCol] if it matches the top of our die
-				if (Board[NewRow][NewCol] == Die[1][1] || Board[NewRow][NewCol] == AST && Board[NewRow][NewCol] != prevValue)
+				if (i == -1 && j == 0 || i == 1 && j == 0 || i == 0 && j == -1 || i == 0 && j == 1 || i == 1 && j == 1)
 				{
-					direction = FlipDie(Die, row, col, NewRow, NewCol, direction);
-					Directions.push(direction);
-					
-					if (IsSolutionFound(Board, Die, Directions, NewRow, NewCol, direction))
+					int NewRow = CheckValid.x + i; 
+					int NewCol = CheckValid.y + j;					
+
+					if (NewRow >= 0 && NewRow < size && NewCol >= 0 && NewCol < size)
 					{
-						return true;
-					}
-					else
-					{
-						Directions.pop();
-						return false;
+						if (Board[NewRow][NewCol] == NewDie[1][1] || Board[NewRow][NewCol] == AST)
+						{
+							Coord NewValid;
+							NewValid.x = NewRow;
+							NewValid.y = NewCol;							
+
+							if (NewRow < CheckValid.x && NewCol == CheckValid.y) NewValid.direction = 'U';
+							else if (NewRow > CheckValid.x && NewCol == CheckValid.y) NewValid.direction = 'D';
+							else if (NewCol < CheckValid.y && NewRow == CheckValid.x) NewValid.direction = 'L';
+							else NewValid.direction = 'R';
+
+							Directions.push(NewValid);
+							cout << NewRow << " " << NewCol << " " << NewValid.direction << endl;
+						}
 					}
 				}
 			}
 		}
 	}
-
-
-
-}
-
-struct NodeType
-{
-	int currentX;
-	int currentY;
-	char direction;
-};
-
-void Solve(BoardType &Board, int size)
-{
-	bool found = false;
-	queue<NodeType> NodeQ;
-	NodeType Node, NewNode;
-
-	Node.currentX = size / 2;
-	Node.currentY = size / 2;
-	Node.direction = NULL;
-
-	NodeQ.push(Node);
-
-	while (!found && !NodeQ.empty())
-	{
-		Node = NodeQ.front(); NodeQ.pop();
-		int x = Node.currentX; int y = Node.currentY;
-
-		if (Board[x][y] == 0)
-		{
-
-		}
-		else
-		{
-			// mark previous position
-
-			if (!Marked(Board[x][y - 1])) // Left
-			{
-				NewNode.currentX = x;
-				NewNode.currentY = y - 1;
-				NewNode.direction = 'L';
-				NodeQ.push(NewNode);
-			}
-			if (!Marked(Board[x][y + 1])) // Right
-			{
-				NewNode.currentX = x;
-				NewNode.currentY = y + 1;
-				NewNode.direction = 'R';
-				NodeQ.push(NewNode);
-			}
-			if (!Marked(Board[x - 1][y])) // Up
-			{
-				NewNode.currentX = x - 1;
-				NewNode.currentY = y;
-				NewNode.direction = 'U';
-				NodeQ.push(NewNode);
-			}
-			if (!Marked(Board[x + 1][y])) // Down
-			{
-				NewNode.currentX = x + 1;
-				NewNode.currentY = y;
-				NewNode.direction = 'D';
-				NodeQ.push(NewNode);
-			}
-		}
-	}
-	if (!found)
-	{
-		cout << "No Solution Found." << endl;
-	}
-	DrawBoard(Board, size);
-	cout << endl;
 
 }
 
@@ -323,6 +276,7 @@ void main()
 		while (size != 0)
 		{
 			ClearBoard(Board);
+			// Clear Die
 			for (int i = 0; i < 3; i++)
 				for (int j = 0; j < 4; j++)
 					Die[i][j] = 0;
@@ -330,27 +284,15 @@ void main()
 			ReadBoardFromFile(Board, fin, size);
 			MakeDie(Die, top, side);
 
-			//DrawBoard(Board, size);
-			//DrawDie(Die);
-
 			int row = size / 2;
 			int col = size / 2;
 
 			stack<char> Directions;
 			char direction = 'x';
 
-			if (IsSolutionFound(Board, Die, Directions, row, col, direction))
-				cout << "Found" << endl;
-			else
-				cout << "Solution Not Found" << endl;
+			//Solver(Board, Die, size);
 
-			while (!Directions.empty())
-			{
-				cout << Directions.top();
-				Directions.pop();
-			}
-			cout << endl;
-			DrawBoard(Board, size);
+			Test(Board, Die, size);
 
 			fin >> size >> top >> side;
 		}
